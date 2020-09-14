@@ -1,0 +1,94 @@
+import 'package:flutter/material.dart';
+import 'package:mask/model/store.dart';
+import 'package:mask/ui/widget/remain_stat_list_tile.dart';
+import 'package:mask/viewmodel/store_model_stream.dart';
+
+class StreamPage extends StatelessWidget {
+  final StoreModel storeModel = new StoreModel();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<Store>>(
+        stream: storeModel.storeModelStream.stream,
+        initialData: [],
+        builder: (context, snapshot) {
+          return Scaffold(
+              appBar: AppBar(
+                title: Text('마스크 재고 있는 곳 : ${snapshot.data.length}곳'),
+                actions: <Widget>[
+                  IconButton(
+                    icon: Icon(Icons.refresh),
+                    onPressed: () {
+                      storeModel.fetch();
+                    },
+                  )
+                ],
+              ),
+//      body: _buildBody(storeModel),
+              body: _buildBody(snapshot.data));
+        });
+  }
+
+  Widget _buildBody(List<Store> stores) {
+    return StreamBuilder<bool>(
+      stream: storeModel.isLoadingStream.stream,
+      initialData: true,
+      builder: (context, snapshot) {
+        if (snapshot.data) {
+          return loadingWidget();
+        } else if (stores.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text('반경 5km 이내에 재고가 있는 매장이 없습니다'),
+                Text('또는 인터넷이 연결되어 있는지 확인해 주세요'),
+              ],
+            ),
+          );
+        }
+        return ListView(
+          children: stores.map((e) {
+            return RemainStatListTile(e);
+          }).toList(),
+        );
+      },
+    );
+  }
+
+//    if (storeModel.isLoadingStream.stream) {
+//      return loadingWidget();
+//    } else if (stores.isEmpty) {
+//      return Center(
+//        child: Column(
+//          mainAxisAlignment: MainAxisAlignment.center,
+//          children: <Widget>[
+//            Text('반경 5km 이내에 재고가 있는 매장이 없습니다'),
+//            Text('또는 인터넷이 연결되어 있는지 확인해 주세요'),
+//          ],
+//        ),
+//      );
+//    }
+//
+//    return ListView(
+//      children: stores.map((e) {
+//        return RemainStatListTile(e);
+//      }).toList(),
+//    );
+//  }
+
+  Widget loadingWidget() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          Text('정보를 가져오는 중'),
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: CircularProgressIndicator(),
+          ),
+        ],
+      ),
+    );
+  }
+}
